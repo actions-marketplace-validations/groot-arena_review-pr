@@ -13,9 +13,14 @@ describe('impact-engine', () => {
       'Dockerfile',
       'compose.yaml',
       'compose.yml',
+      'compose.override.yaml',
       'docker-compose.yml',
+      'docker-compose.override.yml',
+      'docker-compose.env',
+      'backend-compose.yml',
       '.github/workflows/ci.yml',
       'src/auth/jwt.service.ts',
+      'src/utils/compose.ts',
       'src/normal-code.ts',
     ];
 
@@ -28,7 +33,12 @@ describe('impact-engine', () => {
     expect(dockerImpact?.matchedFiles).toContain('Dockerfile');
     expect(dockerImpact?.matchedFiles).toContain('compose.yaml');
     expect(dockerImpact?.matchedFiles).toContain('compose.yml');
+    expect(dockerImpact?.matchedFiles).toContain('compose.override.yaml');
     expect(dockerImpact?.matchedFiles).toContain('docker-compose.yml');
+    expect(dockerImpact?.matchedFiles).toContain('docker-compose.override.yml');
+    expect(dockerImpact?.matchedFiles).toContain('docker-compose.env');
+    expect(dockerImpact?.matchedFiles).toContain('backend-compose.yml');
+    expect(dockerImpact?.matchedFiles).not.toContain('src/utils/compose.ts');
 
     const ruleIds = result.matchedImpacts.map((m) => m.rule.id);
     expect(ruleIds).toContain('docker-infra');

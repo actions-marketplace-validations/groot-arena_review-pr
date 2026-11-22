@@ -8,8 +8,9 @@
       "description": "Changes to container definitions, orchestrators, and infrastructure code",
       "patterns": [
         "**/Dockerfile*",
-        "**/docker-compose*.{yml,yaml}",
+        "**/docker-compose*",
         "**/compose*.{yml,yaml}",
+        "**/*compose*.{yml,yaml}",
         "docker/**",
         ".docker/**",
         "deploy/**",
