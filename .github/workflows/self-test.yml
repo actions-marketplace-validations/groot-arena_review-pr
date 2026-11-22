@@ -37,11 +37,11 @@ jobs:
       - name: ESLint Static Analysis
         run: npm run lint
 
-      - name: Vitest Unit Tests & Coverage Thresholds
-        run: npm run test:coverage
-
       - name: Build Bundles
         run: npm run build
+
+      - name: Vitest Unit Tests & Coverage Thresholds
+        run: npm run test:coverage
 
       - name: Actionlint Workflow Validation
         run: |

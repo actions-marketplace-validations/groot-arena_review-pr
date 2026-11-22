@@ -43,14 +43,17 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Run Quality Verification
-        run: |
-          npm run typecheck
-          npm run lint
-          npm test
+      - name: Strict TypeScript Compilation Check
+        run: npm run typecheck
+
+      - name: ESLint Static Analysis
+        run: npm run lint
 
       - name: Build Standalone dist/ Bundles
         run: npm run build
+
+      - name: Run Tests
+        run: npm test
 
       - name: Commit dist/ and Tag Release
         env:

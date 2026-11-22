@@ -9,6 +9,12 @@ describe('End-to-End Consumer Verification Flow', () => {
   const distPrSummary = path.resolve('dist/pr-summary.js');
 
   beforeAll(() => {
+    // 0. Ensure dist bundles exist before running E2E tests
+    const rootDir = path.resolve('.');
+    if (!fs.existsSync(distPostReview) || !fs.existsSync(distPrSummary)) {
+      execSync('npm run build', { cwd: rootDir });
+    }
+
     // 1. Clean up & initialize consumer repo
     if (fs.existsSync(e2eDir)) {
       fs.rmSync(e2eDir, { recursive: true, force: true });
