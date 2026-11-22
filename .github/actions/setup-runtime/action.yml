@@ -23,7 +23,7 @@ runs:
   steps:
     - name: Setup Node.js
       if: inputs.language == 'node'
-      uses: actions/setup-node@1d0ffbe78b63af40301c58b63d91231a50b2832c # v4.2.0
+      uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
       with:
         node-version: ${{ inputs.runtime-version != '' && inputs.runtime-version || '20' }}
         cache: 'npm'
@@ -41,7 +41,7 @@ runs:
 
     - name: Setup Go
       if: inputs.language == 'go'
-      uses: actions/setup-go@f111f330730b5538f650a1ff810da714249457a4 # v5.3.0
+      uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5.3.0
       with:
         go-version: ${{ inputs.runtime-version != '' && inputs.runtime-version || '1.23' }}
         cache: true
