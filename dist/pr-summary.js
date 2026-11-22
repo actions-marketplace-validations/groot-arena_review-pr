@@ -31814,7 +31814,7 @@ var ImpactConfigSchema = external_exports.object({
 var PostInlineReviewInputsSchema = external_exports.object({
   sarifPath: external_exports.string().min(1),
   maxInlineComments: external_exports.coerce.number().int().positive().default(15),
-  githubToken: external_exports.string().min(1),
+  githubToken: external_exports.string().default(""),
   baseRef: external_exports.string().default("origin/main"),
   headRef: external_exports.string().default("HEAD"),
   workingDirectory: external_exports.string().default(".")
@@ -33027,12 +33027,19 @@ async function run() {
       }
     }
     const context2 = github.context;
-    const repoFullName = context2.repo.owner && context2.repo.repo ? `${context2.repo.owner}/${context2.repo.repo}` : process.env["GITHUB_REPOSITORY"];
+    let repoOwner = "";
+    let repoName = "";
+    const repoEnv = process.env["GITHUB_REPOSITORY"];
+    if (repoEnv && repoEnv.includes("/")) {
+      const parts = repoEnv.split("/");
+      repoOwner = parts[0] || "";
+      repoName = parts[1] || "";
+    }
     const commitSha = context2.payload.pull_request?.head?.sha || process.env["GITHUB_SHA"] || inputs.headRef;
     const runId = String(context2.runId || process.env["GITHUB_RUN_ID"] || "");
     const markdownSummary = renderPrSummary({
       reportId: inputs.reportId,
-      repoName: repoFullName,
+      repoName: repoEnv || void 0,
       headRef: inputs.headRef,
       baseRef: inputs.baseRef,
       commitSha,
@@ -33050,12 +33057,12 @@ async function run() {
     });
     await core.summary.addRaw(markdownSummary).write();
     const prNumber = context2.payload.pull_request?.number || (process.env["PR_NUMBER"] ? parseInt(process.env["PR_NUMBER"], 10) : void 0);
-    if (prNumber && inputs.githubToken && context2.repo.owner && context2.repo.repo) {
+    if (prNumber && inputs.githubToken && repoOwner && repoName) {
       const octokit = github.getOctokit(inputs.githubToken);
       const { commentId, updated } = await upsertStickyPrComment({
         octokit,
-        owner: context2.repo.owner,
-        repo: context2.repo.repo,
+        owner: repoOwner,
+        repo: repoName,
         issueNumber: prNumber,
         reportId: inputs.reportId,
         body: markdownSummary

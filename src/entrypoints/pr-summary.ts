@@ -118,13 +118,21 @@ export async function run(): Promise<void> {
 
     // 7. Render Report
     const context = github.context;
-    const repoFullName = context.repo.owner && context.repo.repo ? `${context.repo.owner}/${context.repo.repo}` : process.env['GITHUB_REPOSITORY'];
+    let repoOwner = '';
+    let repoName = '';
+    const repoEnv = process.env['GITHUB_REPOSITORY'];
+    if (repoEnv && repoEnv.includes('/')) {
+      const parts = repoEnv.split('/');
+      repoOwner = parts[0] || '';
+      repoName = parts[1] || '';
+    }
+
     const commitSha = context.payload.pull_request?.head?.sha || process.env['GITHUB_SHA'] || inputs.headRef;
     const runId = String(context.runId || process.env['GITHUB_RUN_ID'] || '');
 
     const markdownSummary = renderPrSummary({
       reportId: inputs.reportId,
-      repoName: repoFullName,
+      repoName: repoEnv || undefined,
       headRef: inputs.headRef,
       baseRef: inputs.baseRef,
       commitSha,
@@ -147,12 +155,12 @@ export async function run(): Promise<void> {
     // 9. Upsert Sticky PR Comment
     const prNumber = context.payload.pull_request?.number || (process.env['PR_NUMBER'] ? parseInt(process.env['PR_NUMBER'], 10) : undefined);
 
-    if (prNumber && inputs.githubToken && context.repo.owner && context.repo.repo) {
+    if (prNumber && inputs.githubToken && repoOwner && repoName) {
       const octokit = github.getOctokit(inputs.githubToken);
       const { commentId, updated } = await upsertStickyPrComment({
         octokit,
-        owner: context.repo.owner,
-        repo: context.repo.repo,
+        owner: repoOwner,
+        repo: repoName,
         issueNumber: prNumber,
         reportId: inputs.reportId,
         body: markdownSummary,

@@ -20,7 +20,7 @@ export type ImpactConfig = z.infer<typeof ImpactConfigSchema>;
 export const PostInlineReviewInputsSchema = z.object({
   sarifPath: z.string().min(1),
   maxInlineComments: z.coerce.number().int().positive().default(15),
-  githubToken: z.string().min(1),
+  githubToken: z.string().default(''),
   baseRef: z.string().default('origin/main'),
   headRef: z.string().default('HEAD'),
   workingDirectory: z.string().default('.'),

@@ -67,15 +67,23 @@ export async function run(): Promise<void> {
     // Post to PR if PR context & token available
     const context = github.context;
     const prNumber = context.payload.pull_request?.number || (process.env['PR_NUMBER'] ? parseInt(process.env['PR_NUMBER'], 10) : undefined);
+    let repoOwner = '';
+    let repoName = '';
+    const repoEnv = process.env['GITHUB_REPOSITORY'];
+    if (repoEnv && repoEnv.includes('/')) {
+      const parts = repoEnv.split('/');
+      repoOwner = parts[0] || '';
+      repoName = parts[1] || '';
+    }
 
-    if (prNumber && inputs.githubToken) {
+    if (prNumber && inputs.githubToken && repoOwner && repoName) {
       const octokit = github.getOctokit(inputs.githubToken);
       const commitSha = context.payload.pull_request?.head?.sha || process.env['GITHUB_SHA'] || inputs.headRef;
 
       const syncResult = await syncInlineReviews({
         octokit,
-        owner: context.repo.owner,
-        repo: context.repo.repo,
+        owner: repoOwner,
+        repo: repoName,
         pullNumber: prNumber,
         commitSha,
         inlineComments: reviewResult.inlineComments,

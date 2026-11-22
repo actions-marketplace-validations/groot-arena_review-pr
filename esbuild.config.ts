@@ -32,6 +32,11 @@ async function build(): Promise<void> {
     }),
   ]);
 
+  fs.writeFileSync(
+    path.join(outdir, 'package.json'),
+    JSON.stringify({ type: 'commonjs' }, null, 2)
+  );
+
   console.log('✓ Build completed successfully.');
 }
 

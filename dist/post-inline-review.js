@@ -30038,7 +30038,7 @@ var ImpactConfigSchema = external_exports.object({
 var PostInlineReviewInputsSchema = external_exports.object({
   sarifPath: external_exports.string().min(1),
   maxInlineComments: external_exports.coerce.number().int().positive().default(15),
-  githubToken: external_exports.string().min(1),
+  githubToken: external_exports.string().default(""),
   baseRef: external_exports.string().default("origin/main"),
   headRef: external_exports.string().default("HEAD"),
   workingDirectory: external_exports.string().default(".")
@@ -30739,13 +30739,21 @@ async function run() {
     );
     const context2 = github.context;
     const prNumber = context2.payload.pull_request?.number || (process.env["PR_NUMBER"] ? parseInt(process.env["PR_NUMBER"], 10) : void 0);
-    if (prNumber && inputs.githubToken) {
+    let repoOwner = "";
+    let repoName = "";
+    const repoEnv = process.env["GITHUB_REPOSITORY"];
+    if (repoEnv && repoEnv.includes("/")) {
+      const parts = repoEnv.split("/");
+      repoOwner = parts[0] || "";
+      repoName = parts[1] || "";
+    }
+    if (prNumber && inputs.githubToken && repoOwner && repoName) {
       const octokit = github.getOctokit(inputs.githubToken);
       const commitSha = context2.payload.pull_request?.head?.sha || process.env["GITHUB_SHA"] || inputs.headRef;
       const syncResult = await syncInlineReviews({
         octokit,
-        owner: context2.repo.owner,
-        repo: context2.repo.repo,
+        owner: repoOwner,
+        repo: repoName,
         pullNumber: prNumber,
         commitSha,
         inlineComments: reviewResult.inlineComments,
