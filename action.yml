@@ -1,4 +1,4 @@
-name: 'review-pr'
+name: 'Review PR - Quality Gates & Diff Coverage'
 description: 'Automated PR quality gates, diff coverage, inline SARIF reviews, and sticky PR reports.'
 author: 'Groot Arena'
 branding:
