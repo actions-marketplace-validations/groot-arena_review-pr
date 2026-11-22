@@ -112,7 +112,7 @@ end_of_record`;
         GITHUB_ACTIONS: 'true',
         GITHUB_OUTPUT: outputFile,
         GITHUB_STEP_SUMMARY: summaryFile,
-        GITHUB_REPOSITORY: 'groot-arena/ci-pr-verification-workflow',
+        GITHUB_REPOSITORY: 'groot-arena/review-pr',
         GITHUB_SHA: 'abc1234567890abcdef1234567890abcdef12345',
         GITHUB_RUN_ID: '987654321',
         INPUT_JUNIT_PATH: junitPath,

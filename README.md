@@ -1,8 +1,8 @@
 # Enterprise Multi-Language PR Verification Workflow
 
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-PR%20Verification-blue?logo=github)](https://github.com/marketplace/actions/enterprise-multi-language-pr-verification)
-[![Self-Test & Quality Gates](https://github.com/groot-arena/ci-pr-verification-workflow/actions/workflows/self-test.yml/badge.svg)](https://github.com/groot-arena/ci-pr-verification-workflow/actions/workflows/self-test.yml)
-[![Version](https://img.shields.io/badge/version-v1-blue.svg)](https://github.com/groot-arena/ci-pr-verification-workflow/releases)
+[![Self-Test & Quality Gates](https://github.com/groot-arena/review-pr/actions/workflows/self-test.yml/badge.svg)](https://github.com/groot-arena/review-pr/actions/workflows/self-test.yml)
+[![Version](https://img.shields.io/badge/version-v1-blue.svg)](https://github.com/groot-arena/review-pr/releases)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20NodeNext-blue)](tsconfig.json)
 
@@ -39,7 +39,7 @@ An enterprise-grade, reusable GitHub Action and Workflow (`@v1`) published in th
 
 ## Key Features & Architecture
 
-* **Dual-Consumption Model:** Available both as a drop-in **GitHub Marketplace composite action** (`uses: groot-arena/ci-pr-verification-workflow@v1`) for existing pipelines, and as a **turnkey reusable workflow** (`.github/workflows/pr-verification.yml@v1`) for complete parallel CI gate orchestration.
+* **Dual-Consumption Model:** Available both as a drop-in **GitHub Marketplace composite action** (`uses: groot-arena/review-pr@v1`) for existing pipelines, and as a **turnkey reusable workflow** (`.github/workflows/pr-verification.yml@v1`) for complete parallel CI gate orchestration.
 * **Universal Language-Agnostic Engine:** Consumer repositories emit industry-standard formats (**JUnit XML**, **LCOV / Cobertura XML**, **SARIF / RDJSON**), enabling a single verified workflow to support Node.js, Python, Go, Java, and custom stacks.
 * **Strict TypeScript + Runtime Schema Validation:** All central logic is written in strict TypeScript (`strict: true`, `noUncheckedIndexedAccess: true`, `exactOptionalPropertyTypes: true`) paired with **Zod** runtime schemas to safely validate untrusted external XML/JSON reports.
 * **Pre-Bundled Native Actions (`esbuild`):** TypeScript entrypoints are compiled into self-contained `dist/*.js` bundles and run via native Node actions (`using: 'node20'`), delivering sub-second startup with **zero `npm install` overhead** on consumer PRs.
@@ -80,7 +80,7 @@ jobs:
       # ... Run your project's tests, coverage, and linting here ...
 
       - name: PR Verification & Sticky Report
-        uses: groot-arena/ci-pr-verification-workflow@v1
+        uses: groot-arena/review-pr@v1
         with:
           junit-path: 'reports/junit.xml'
           coverage-path: 'reports/lcov.info'
@@ -107,7 +107,7 @@ permissions:
 
 jobs:
   verify:
-    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1
     with:
       language: 'node'
       runtime-version: '22'
@@ -146,7 +146,7 @@ To integrate any language stack, configure your build/test commands to emit stan
      pull-requests: write
      security-events: write
    ```
-3. Call `groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1` with your language and verification commands.
+3. Call `groot-arena/review-pr/.github/workflows/pr-verification.yml@v1` with your language and verification commands.
 
 ---
 
@@ -169,7 +169,7 @@ permissions:
 
 jobs:
   verify:
-    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1
     with:
       language: 'node'
       runtime-version: '22'
@@ -204,7 +204,7 @@ permissions:
 
 jobs:
   verify:
-    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1
     with:
       language: 'python'
       runtime-version: '3.12'
@@ -238,7 +238,7 @@ permissions:
 
 jobs:
   verify:
-    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1
     with:
       language: 'go'
       runtime-version: '1.23'
@@ -275,7 +275,7 @@ permissions:
 
 jobs:
   verify:
-    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1
     with:
       language: 'java'
       runtime-version: '21'
@@ -307,7 +307,7 @@ permissions:
 
 jobs:
   verify-frontend:
-    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1
     with:
       language: 'node'
       runtime-version: '22'
@@ -322,7 +322,7 @@ jobs:
       sarif-path: 'frontend/lint.sarif'
 
   verify-backend:
-    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1
     with:
       language: 'go'
       runtime-version: '1.23'
@@ -393,7 +393,7 @@ To enforce that PRs cannot merge without passing all quality, test, and coverage
 
 ### Marketplace Action (`action.yml`) Reference
 
-Used when consuming the repository as a step via `uses: groot-arena/ci-pr-verification-workflow@v1`:
+Used when consuming the repository as a step via `uses: groot-arena/review-pr@v1`:
 
 #### Inputs
 
@@ -433,7 +433,7 @@ Used when consuming the repository as a step via `uses: groot-arena/ci-pr-verifi
 
 ### Reusable Workflow (`pr-verification.yml`) Reference
 
-Used when calling the workflow via `uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1`:
+Used when calling the workflow via `uses: groot-arena/review-pr/.github/workflows/pr-verification.yml@v1`:
 
 #### Inputs
 

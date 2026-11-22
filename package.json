@@ -1,7 +1,7 @@
 {
-  "name": "ci-pr-verification",
+  "name": "review-pr",
   "version": "1.0.0",
-  "description": "Enterprise Multi-Language PR Verification Reusable Workflow",
+  "description": "Enterprise Multi-Language PR Verification and Review Workflow",
   "type": "module",
   "private": true,
   "scripts": {
