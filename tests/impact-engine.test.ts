@@ -11,6 +11,9 @@ describe('impact-engine', () => {
 
     const changedPaths = [
       'Dockerfile',
+      'compose.yaml',
+      'compose.yml',
+      'docker-compose.yml',
       '.github/workflows/ci.yml',
       'src/auth/jwt.service.ts',
       'src/normal-code.ts',
@@ -19,6 +22,13 @@ describe('impact-engine', () => {
     const result = analyzeImpact(changedPaths, config);
 
     expect(result.matchedImpacts.length).toBe(3);
+
+    const dockerImpact = result.matchedImpacts.find((m) => m.rule.id === 'docker-infra');
+    expect(dockerImpact).toBeDefined();
+    expect(dockerImpact?.matchedFiles).toContain('Dockerfile');
+    expect(dockerImpact?.matchedFiles).toContain('compose.yaml');
+    expect(dockerImpact?.matchedFiles).toContain('compose.yml');
+    expect(dockerImpact?.matchedFiles).toContain('docker-compose.yml');
 
     const ruleIds = result.matchedImpacts.map((m) => m.rule.id);
     expect(ruleIds).toContain('docker-infra');
