@@ -1,6 +1,6 @@
-# Enterprise Multi-Language PR Verification Workflow
+# review-pr: Enterprise PR Verification Workflow
 
-[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-PR%20Verification-blue?logo=github)](https://github.com/marketplace/actions/enterprise-multi-language-pr-verification)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-review--pr-blue?logo=github)](https://github.com/marketplace/actions/review-pr)
 [![Self-Test & Quality Gates](https://github.com/groot-arena/review-pr/actions/workflows/self-test.yml/badge.svg)](https://github.com/groot-arena/review-pr/actions/workflows/self-test.yml)
 [![Version](https://img.shields.io/badge/version-v1-blue.svg)](https://github.com/groot-arena/review-pr/releases)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.md)

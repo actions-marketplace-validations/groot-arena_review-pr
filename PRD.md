@@ -1,10 +1,10 @@
-# Product Requirements Document (PRD): Enterprise Multi-Language PR Verification Workflow
+# Product Requirements Document (PRD): review-pr Enterprise Workflow
 
 | Metadata | Details |
 | :--- | :--- |
 | **Document Status** | Draft / Ready for Review |
 | **Target Release** | v1.0.0 |
-| **Repository** | `your-org/ci-pr-verification` |
+| **Repository** | `groot-arena/review-pr` |
 | **Implementation Stack** | Strict TypeScript (ESM), Zod, `esbuild`, GitHub Actions (Node & Composite) |
 | **Primary Stakeholders** | Platform Engineering, Security/AppSec, Application Engineering Teams |
 

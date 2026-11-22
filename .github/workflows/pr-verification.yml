@@ -1,4 +1,4 @@
-name: 'Enterprise Multi-Language PR Verification'
+name: 'review-pr'
 
 on:
   workflow_call:

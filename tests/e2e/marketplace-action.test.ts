@@ -25,7 +25,7 @@ describe('GitHub Marketplace Action Metadata & Execution', () => {
     expect(nameMatch).not.toBeNull();
     const actionName = nameMatch?.[1] ?? '';
     expect(actionName.length).toBeGreaterThan(0);
-    expect(actionName).toBe('Enterprise Multi-Language PR Verification');
+    expect(actionName).toBe('review-pr');
 
     // 2. Description must be <= 125 characters for Marketplace
     const descMatch = actionContent.match(/^description:\s*['"](.+)['"]/m);
