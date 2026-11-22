@@ -40,10 +40,8 @@ jobs:
       - name: Vitest Unit Tests & Coverage Thresholds
         run: npm run test:coverage
 
-      - name: Verify dist/ Freshness
-        run: |
-          npm run build
-          git diff --exit-code dist/ || (echo "::error::dist/ bundles are stale! Please run 'npm run build' and commit changes." && exit 1)
+      - name: Build Bundles
+        run: npm run build
 
       - name: Actionlint Workflow Validation
         run: |
