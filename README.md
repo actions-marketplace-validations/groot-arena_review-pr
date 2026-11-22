@@ -1,8 +1,7 @@
 # Enterprise Multi-Language PR Verification Workflow
 
-[![Self-Test & Quality Gates](https://github.com/your-org/ci-pr-verification/actions/workflows/self-test.yml/badge.svg)](https://github.com/your-org/ci-pr-verification/actions/workflows/self-test.yml)
-[![Version](https://img.shields.io/badge/version-v1-blue.svg)](https://github.com/your-org/ci-pr-verification/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Self-Test & Quality Gates](https://github.com/groot-arena/ci-pr-verification-workflow/actions/workflows/self-test.yml/badge.svg)](https://github.com/groot-arena/ci-pr-verification-workflow/actions/workflows/self-test.yml)
+[![Version](https://img.shields.io/badge/version-v1-blue.svg)](https://github.com/groot-arena/ci-pr-verification-workflow/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20NodeNext-blue)](tsconfig.json)
 
 An enterprise-grade, reusable GitHub Actions workflow (`@v1`) that provides automated quality gates, high-signal inline static analysis reviews on changed lines, blast-radius detection, and a single idempotent sticky Pull Request summary report.
@@ -63,7 +62,7 @@ To integrate any language stack, configure your build/test commands to emit stan
      pull-requests: write
      security-events: write
    ```
-3. Call `your-org/ci-pr-verification/.github/workflows/pr-verification.yml@v1` with your language and verification commands.
+3. Call `groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1` with your language and verification commands.
 
 ---
 
@@ -86,7 +85,7 @@ permissions:
 
 jobs:
   verify:
-    uses: your-org/ci-pr-verification/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
     with:
       language: 'node'
       runtime-version: '22'
@@ -121,7 +120,7 @@ permissions:
 
 jobs:
   verify:
-    uses: your-org/ci-pr-verification/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
     with:
       language: 'python'
       runtime-version: '3.12'
@@ -155,7 +154,7 @@ permissions:
 
 jobs:
   verify:
-    uses: your-org/ci-pr-verification/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
     with:
       language: 'go'
       runtime-version: '1.23'
@@ -192,7 +191,7 @@ permissions:
 
 jobs:
   verify:
-    uses: your-org/ci-pr-verification/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
     with:
       language: 'java'
       runtime-version: '21'
@@ -224,7 +223,7 @@ permissions:
 
 jobs:
   verify-frontend:
-    uses: your-org/ci-pr-verification/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
     with:
       language: 'node'
       runtime-version: '22'
@@ -239,7 +238,7 @@ jobs:
       sarif-path: 'frontend/lint.sarif'
 
   verify-backend:
-    uses: your-org/ci-pr-verification/.github/workflows/pr-verification.yml@v1
+    uses: groot-arena/ci-pr-verification-workflow/.github/workflows/pr-verification.yml@v1
     with:
       language: 'go'
       runtime-version: '1.23'
