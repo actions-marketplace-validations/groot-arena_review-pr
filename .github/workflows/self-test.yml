@@ -1,0 +1,51 @@
+name: 'Self-Test & Quality Gates'
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: self-test-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint, Test, Build & Dist Freshness Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1d0ffbe78b63af40301c58b63d91231a50b2832c # v4.2.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Strict TypeScript Compilation Check
+        run: npm run typecheck
+
+      - name: ESLint Static Analysis
+        run: npm run lint
+
+      - name: Vitest Unit Tests & Coverage Thresholds
+        run: npm run test:coverage
+
+      - name: Verify dist/ Freshness
+        run: |
+          npm run build
+          git diff --exit-code dist/ || (echo "::error::dist/ bundles are stale! Please run 'npm run build' and commit changes." && exit 1)
+
+      - name: Actionlint Workflow Validation
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color

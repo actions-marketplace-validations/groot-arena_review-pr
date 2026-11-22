@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "id": "docker-infra",
+      "name": "Docker & Infrastructure",
+      "description": "Changes to container definitions, orchestrators, and infrastructure code",
+      "patterns": [
+        "**/Dockerfile*",
+        "**/docker-compose*.{yml,yaml}",
+        "docker/**",
+        ".docker/**",
+        "deploy/**",
+        "terraform/**",
+        "k8s/**",
+        "helm/**"
+      ],
+      "checklist": [
+        "Verify base image version pinning and security scanning",
+        "Check build context exclusions (.dockerignore) to prevent leaking secrets",
+        "Ensure containers run as non-root users with least-privilege capabilities",
+        "Verify resource limits (CPU/memory) and healthcheck configurations"
+      ]
+    },
+    {
+      "id": "ci-cd",
+      "name": "CI/CD & Workflows",
+      "description": "Changes to pipeline definitions, build scripts, and automation",
+      "patterns": [
+        ".github/**",
+        ".gitlab-ci.yml",
+        "Jenkinsfile",
+        ".circleci/**",
+        "scripts/ci/**"
+      ],
+      "checklist": [
+        "Confirm all third-party GitHub Actions are pinned to full 40-character commit SHAs",
+        "Verify least-privilege permissions block (e.g., permissions: {}) at workflow root",
+        "Ensure runner secrets are not echoed or exposed in logs",
+        "Verify fork safety (pull_request vs pull_request_target)"
+      ]
+    },
+    {
+      "id": "auth-security",
+      "name": "Authentication & Security",
+      "description": "Changes affecting authentication, authorization, cryptography, and access control",
+      "patterns": [
+        "**/auth/**",
+        "**/authentication/**",
+        "**/authorization/**",
+        "**/security/**",
+        "**/oauth/**",
+        "**/jwt/**",
+        "**/rbac/**",
+        "**/session/**"
+      ],
+      "checklist": [
+        "Verify session expiration and secure cookie flags (Secure, HttpOnly, SameSite)",
+        "Check password hashing algorithms and salt parameters",
+        "Ensure authorization checks are performed on every protected API endpoint",
+        "Check that sensitive credentials and tokens are never logged or stored in plain text"
+      ]
+    },
+    {
+      "id": "database-migrations",
+      "name": "Database & Migrations",
+      "description": "Changes to database schema, migrations, ORM entities, and raw queries",
+      "patterns": [
+        "**/migrations/**",
+        "**/migration/**",
+        "**/db/**",
+        "**/schema/**",
+        "**/models/**",
+        "**/entities/**",
+        "**/*.sql",
+        "prisma/**"
+      ],
+      "checklist": [
+        "Verify backward compatibility for zero-downtime rolling deployments",
+        "Ensure migration includes safe rollback or reversible operations",
+        "Check column additions on large tables for blocking locks and timeout settings",
+        "Verify parameterization of all dynamic SQL queries to prevent SQL injection"
+      ]
+    },
+    {
+      "id": "dependencies",
+      "name": "Core Dependencies",
+      "description": "Modifications to package manifests and lockfiles",
+      "patterns": [
+        "**/package.json",
+        "**/package-lock.json",
+        "**/pnpm-lock.yaml",
+        "**/yarn.lock",
+        "**/requirements*.txt",
+        "**/Pipfile*",
+        "**/pyproject.toml",
+        "**/go.mod",
+        "**/go.sum",
+        "**/pom.xml",
+        "**/build.gradle*"
+      ],
+      "checklist": [
+        "Confirm new dependencies have an active maintenance status and reputable license",
+        "Check vulnerability advisories (npm audit, safety, govulncheck)",
+        "Ensure lockfile is committed and matches manifest changes exactly",
+        "Evaluate bundle size impact for client-facing libraries"
+      ]
+    },
+    {
+      "id": "tests",
+      "name": "Test Suites",
+      "description": "Changes to unit, integration, or end-to-end test suites",
+      "patterns": [
+        "tests/**",
+        "test/**",
+        "**/__tests__/**",
+        "**/*.spec.*",
+        "**/*.test.*",
+        "cypress/**",
+        "playwright/**"
+      ],
+      "checklist": [
+        "Verify tests assert meaningful behaviors rather than mocking the tested logic",
+        "Check for test flakiness (deterministic waits, no race conditions)",
+        "Ensure new code paths have corresponding positive, negative, and edge-case tests"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+name: 'Post Inline Static Analysis Review'
+description: 'Formats and posts diff-only inline comments to PRs with deduplication and auto-resolution'
+
+inputs:
+  sarif-path:
+    description: 'Path to SARIF / RDJSON file'
+    required: true
+  max-inline-comments:
+    description: 'Cap on inline review comments per PR'
+    required: false
+    default: '15'
+  github-token:
+    description: 'GitHub token for API access'
+    required: false
+    default: ''
+  base-ref:
+    description: 'Base ref for PR diff'
+    required: false
+    default: 'origin/main'
+  head-ref:
+    description: 'Head ref for PR diff'
+    required: false
+    default: 'HEAD'
+  working-directory:
+    description: 'Working directory'
+    required: false
+    default: '.'
+
+outputs:
+  total-findings:
+    description: 'Total static analysis findings count'
+  critical-findings:
+    description: 'Critical severity findings count'
+  error-findings:
+    description: 'Error severity findings count'
+  warning-findings:
+    description: 'Warning severity findings count'
+  inline-comments-posted:
+    description: 'Number of inline comments posted to the PR'
+  overflow-count:
+    description: 'Number of findings exceeding inline cap'
+
+runs:
+  using: 'node20'
+  main: '../../../dist/post-inline-review.js'

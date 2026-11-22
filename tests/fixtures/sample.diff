@@ -1,0 +1,25 @@
+diff --git a/src/services/auth.service.ts b/src/services/auth.service.ts
+index e69de29..b85351a 100644
+--- a/src/services/auth.service.ts
++++ b/src/services/auth.service.ts
+@@ -10,6 +10,12 @@ export class AuthService {
+   validateToken(token: string): boolean {
+-    return token === 'secret';
++    if (!token) {
++      return false;
++    }
++    const decoded = verifyJwt(token);
++    return decoded !== null;
+   }
+ }
+diff --git a/Dockerfile b/Dockerfile
+new file mode 100644
+index 0000000..f69a531
+--- /dev/null
++++ b/Dockerfile
+@@ -0,0 +1,5 @@
++FROM node:22-alpine
++WORKDIR /app
++COPY . .
++RUN npm ci --omit=dev
++CMD ["node", "dist/index.js"]

@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
+<coverage line-rate="0.75" branch-rate="0.5" lines-covered="3" lines-valid="4" timestamp="1600000000">
+  <packages>
+    <package name="services" line-rate="0.75" branch-rate="0.5">
+      <classes>
+        <class name="AuthService" filename="src/services/auth.service.ts" line-rate="0.75">
+          <lines>
+            <line number="10" hits="1"/>
+            <line number="11" hits="1"/>
+            <line number="12" hits="0"/>
+            <line number="13" hits="1"/>
+          </lines>
+        </class>
+      </classes>
+    </package>
+  </packages>
+</coverage>

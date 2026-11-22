@@ -1,0 +1,56 @@
+name: 'PR Summary Report & Sticky Comment'
+description: 'Generates verdict-first Markdown report, writes to GITHUB_STEP_SUMMARY, and upserts sticky PR comment'
+
+inputs:
+  report-id:
+    description: 'Unique report identifier for monorepos'
+    required: false
+    default: 'default'
+  coverage-threshold:
+    description: 'Overall line coverage threshold percentage'
+    required: false
+    default: '80'
+  diff-coverage-threshold:
+    description: 'Diff line coverage threshold percentage'
+    required: false
+    default: '80'
+  junit-path:
+    description: 'Path to JUnit XML test report'
+    required: false
+    default: ''
+  coverage-path:
+    description: 'Path to LCOV or Cobertura XML coverage report'
+    required: false
+    default: ''
+  sarif-path:
+    description: 'Path to SARIF static analysis report'
+    required: false
+    default: ''
+  gate-results-path:
+    description: 'Path to gate-results.json report'
+    required: false
+    default: ''
+  impact-rules-path:
+    description: 'Path to consumer impact rules JSON file'
+    required: false
+    default: ''
+  github-token:
+    description: 'GitHub Token for sticky PR comment upsert'
+    required: false
+    default: ''
+  base-ref:
+    description: 'Base ref for git diff'
+    required: false
+    default: 'origin/main'
+  head-ref:
+    description: 'Head ref for git diff'
+    required: false
+    default: 'HEAD'
+  working-directory:
+    description: 'Working directory'
+    required: false
+    default: '.'
+
+runs:
+  using: 'node20'
+  main: '../../../dist/pr-summary.js'

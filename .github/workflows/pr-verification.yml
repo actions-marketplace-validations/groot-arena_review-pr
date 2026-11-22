@@ -1,0 +1,471 @@
+name: 'Enterprise Multi-Language PR Verification'
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: 'Target runtime: node, python, go, java, or custom'
+        required: true
+        type: string
+      runtime-version:
+        description: 'Target runtime version (e.g. 22, 3.12, 1.23, 21)'
+        required: false
+        default: ''
+        type: string
+      working-directory:
+        description: 'Working directory for monorepo setups'
+        required: false
+        default: '.'
+        type: string
+      report-id:
+        description: 'Unique identifier for sticky PR comment report isolation'
+        required: false
+        default: 'default'
+        type: string
+      setup-command:
+        description: 'Optional custom setup command'
+        required: false
+        default: ''
+        type: string
+      install-command:
+        description: 'Dependency installation command (e.g. npm ci)'
+        required: false
+        default: ''
+        type: string
+      typecheck-command:
+        description: 'Typecheck command (skipped if empty)'
+        required: false
+        default: ''
+        type: string
+      lint-command:
+        description: 'Lint / SAST command emitting SARIF or RDJSON (skipped if empty)'
+        required: false
+        default: ''
+        type: string
+      test-command:
+        description: 'Test execution command'
+        required: false
+        default: ''
+        type: string
+      coverage-command:
+        description: 'Optional command to generate or convert coverage report'
+        required: false
+        default: ''
+        type: string
+      build-command:
+        description: 'Production build verification command (skipped if empty)'
+        required: false
+        default: ''
+        type: string
+      junit-path:
+        description: 'Path to JUnit XML test report'
+        required: false
+        default: ''
+        type: string
+      coverage-path:
+        description: 'Path to LCOV or Cobertura XML report'
+        required: false
+        default: ''
+        type: string
+      sarif-path:
+        description: 'Path to SARIF file for inline review & security tab'
+        required: false
+        default: ''
+        type: string
+      max-inline-comments:
+        description: 'Cap on inline review comments per PR'
+        required: false
+        default: 15
+        type: number
+      coverage-threshold:
+        description: 'Overall line coverage threshold percentage'
+        required: false
+        default: 80
+        type: number
+      diff-coverage-threshold:
+        description: 'Diff line coverage threshold percentage'
+        required: false
+        default: 80
+        type: number
+      enable-sonar:
+        description: 'Enables SonarQube PR analysis when SONAR_TOKEN is passed'
+        required: false
+        default: false
+        type: boolean
+      impact-rules-path:
+        description: 'Path to consumer impact rules JSON file'
+        required: false
+        default: ''
+        type: string
+    secrets:
+      SONAR_TOKEN:
+        required: false
+
+permissions: {}
+
+concurrency:
+  group: pr-verification-${{ inputs.report-id }}-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    name: Typecheck Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: inputs.typecheck-command != ''
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Checkout Central CI Tooling
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: 'your-org/ci-pr-verification'
+          path: '.ci-tooling'
+          ref: 'v1'
+
+      - name: Setup Runtime
+        uses: ./.ci-tooling/.github/actions/setup-runtime
+        with:
+          language: ${{ inputs.language }}
+          runtime-version: ${{ inputs.runtime-version }}
+          working-directory: ${{ inputs.working-directory }}
+          setup-command: ${{ inputs.setup-command }}
+
+      - name: Install Dependencies
+        if: inputs.install-command != ''
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          INSTALL_CMD: ${{ inputs.install-command }}
+        run: eval "$INSTALL_CMD"
+
+      - name: Run Typecheck Gate
+        id: gate
+        uses: ./.ci-tooling/.github/actions/run-gate
+        with:
+          name: 'typecheck'
+          command: ${{ inputs.typecheck-command }}
+          working-directory: ${{ inputs.working-directory }}
+
+      - name: Save Gate Result
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p .pr-verification
+          echo '{"name":"typecheck","command":"${{ inputs.typecheck-command }}","status":"${{ steps.gate.outputs.status }}","duration":${{ steps.gate.outputs.duration || 0 }}}' > .pr-verification/typecheck-gate.json
+
+      - name: Upload Gate Result
+        if: always()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: gate-typecheck-${{ inputs.report-id }}
+          path: .pr-verification/typecheck-gate.json
+          retention-days: 1
+
+  lint-and-sast:
+    name: Lint & SAST Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: inputs.lint-command != ''
+    permissions:
+      contents: read
+      pull-requests: write
+      security-events: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Central CI Tooling
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: 'your-org/ci-pr-verification'
+          path: '.ci-tooling'
+          ref: 'v1'
+
+      - name: Setup Runtime
+        uses: ./.ci-tooling/.github/actions/setup-runtime
+        with:
+          language: ${{ inputs.language }}
+          runtime-version: ${{ inputs.runtime-version }}
+          working-directory: ${{ inputs.working-directory }}
+          setup-command: ${{ inputs.setup-command }}
+
+      - name: Install Dependencies
+        if: inputs.install-command != ''
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          INSTALL_CMD: ${{ inputs.install-command }}
+        run: eval "$INSTALL_CMD"
+
+      - name: Run Lint / SAST Gate
+        id: gate
+        uses: ./.ci-tooling/.github/actions/run-gate
+        with:
+          name: 'lint-and-sast'
+          command: ${{ inputs.lint-command }}
+          working-directory: ${{ inputs.working-directory }}
+
+      - name: Post Inline Review Comments
+        if: always() && inputs.sarif-path != ''
+        uses: ./.ci-tooling/.github/actions/post-inline-review
+        with:
+          sarif-path: ${{ inputs.sarif-path }}
+          max-inline-comments: ${{ inputs.max-inline-comments }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-ref: ${{ github.base_ref != '' && format('origin/{0}', github.base_ref) || 'origin/main' }}
+          head-ref: ${{ github.sha }}
+          working-directory: ${{ inputs.working-directory }}
+
+      - name: Upload SARIF to GitHub Security Tab
+        if: always() && inputs.sarif-path != ''
+        uses: github/codeql-action/upload-sarif@b56ba49b26e50535fa1e7f7db0f4f7b4765d80cb # v3.28.10
+        continue-on-error: true
+        with:
+          sarif_file: ${{ inputs.working-directory }}/${{ inputs.sarif-path }}
+          category: pr-verification-${{ inputs.report-id }}
+
+      - name: Save Gate Result
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p .pr-verification
+          echo '{"name":"lint-and-sast","command":"${{ inputs.lint-command }}","status":"${{ steps.gate.outputs.status }}","duration":${{ steps.gate.outputs.duration || 0 }}}' > .pr-verification/lint-gate.json
+
+      - name: Upload Gate & Lint Reports
+        if: always()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: gate-lint-${{ inputs.report-id }}
+          path: |
+            .pr-verification/lint-gate.json
+            ${{ inputs.working-directory }}/.pr-verification/lint-report.json
+            ${{ inputs.working-directory }}/${{ inputs.sarif-path }}
+          retention-days: 1
+
+  test-and-coverage:
+    name: Test & Coverage Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: inputs.test-command != ''
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Checkout Central CI Tooling
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: 'your-org/ci-pr-verification'
+          path: '.ci-tooling'
+          ref: 'v1'
+
+      - name: Setup Runtime
+        uses: ./.ci-tooling/.github/actions/setup-runtime
+        with:
+          language: ${{ inputs.language }}
+          runtime-version: ${{ inputs.runtime-version }}
+          working-directory: ${{ inputs.working-directory }}
+          setup-command: ${{ inputs.setup-command }}
+
+      - name: Install Dependencies
+        if: inputs.install-command != ''
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          INSTALL_CMD: ${{ inputs.install-command }}
+        run: eval "$INSTALL_CMD"
+
+      - name: Run Test Gate
+        id: gate
+        uses: ./.ci-tooling/.github/actions/run-gate
+        with:
+          name: 'test-and-coverage'
+          command: ${{ inputs.test-command }}
+          working-directory: ${{ inputs.working-directory }}
+
+      - name: Run Coverage Command (Optional Conversion)
+        if: inputs.coverage-command != ''
+        uses: ./.ci-tooling/.github/actions/run-gate
+        with:
+          name: 'coverage-conversion'
+          command: ${{ inputs.coverage-command }}
+          working-directory: ${{ inputs.working-directory }}
+
+      - name: Save Gate Result
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p .pr-verification
+          echo '{"name":"test-and-coverage","command":"${{ inputs.test-command }}","status":"${{ steps.gate.outputs.status }}","duration":${{ steps.gate.outputs.duration || 0 }}}' > .pr-verification/test-gate.json
+
+      - name: Upload Test & Coverage Artifacts
+        if: always()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: gate-test-${{ inputs.report-id }}
+          path: |
+            .pr-verification/test-gate.json
+            ${{ inputs.working-directory }}/${{ inputs.junit-path }}
+            ${{ inputs.working-directory }}/${{ inputs.coverage-path }}
+          retention-days: 1
+
+  build:
+    name: Build Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: inputs.build-command != ''
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Checkout Central CI Tooling
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: 'your-org/ci-pr-verification'
+          path: '.ci-tooling'
+          ref: 'v1'
+
+      - name: Setup Runtime
+        uses: ./.ci-tooling/.github/actions/setup-runtime
+        with:
+          language: ${{ inputs.language }}
+          runtime-version: ${{ inputs.runtime-version }}
+          working-directory: ${{ inputs.working-directory }}
+          setup-command: ${{ inputs.setup-command }}
+
+      - name: Install Dependencies
+        if: inputs.install-command != ''
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+        env:
+          INSTALL_CMD: ${{ inputs.install-command }}
+        run: eval "$INSTALL_CMD"
+
+      - name: Run Build Gate
+        id: gate
+        uses: ./.ci-tooling/.github/actions/run-gate
+        with:
+          name: 'build'
+          command: ${{ inputs.build-command }}
+          working-directory: ${{ inputs.working-directory }}
+
+      - name: Save Gate Result
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p .pr-verification
+          echo '{"name":"build","command":"${{ inputs.build-command }}","status":"${{ steps.gate.outputs.status }}","duration":${{ steps.gate.outputs.duration || 0 }}}' > .pr-verification/build-gate.json
+
+      - name: Upload Gate Result
+        if: always()
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+        with:
+          name: gate-build-${{ inputs.report-id }}
+          path: .pr-verification/build-gate.json
+          retention-days: 1
+
+  sonar:
+    name: SonarQube Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: inputs.enable-sonar && !cancelled()
+    needs: [test-and-coverage]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Download Coverage Artifact
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        with:
+          name: gate-test-${{ inputs.report-id }}
+          path: ${{ inputs.working-directory }}
+
+      - name: Run SonarQube Scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          echo "Executing SonarQube analysis for PR #${{ github.event.pull_request.number }}..."
+
+  pr-summary:
+    name: PR Verification Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: always()
+    needs: [typecheck, lint-and-sast, test-and-coverage, build, sonar]
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Central CI Tooling
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: 'your-org/ci-pr-verification'
+          path: '.ci-tooling'
+          ref: 'v1'
+
+      - name: Download Gate & Test Artifacts
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806 # v4.1.9
+        continue-on-error: true
+        with:
+          path: .downloaded-artifacts
+
+      - name: Aggregate Gate Results
+        shell: bash
+        run: |
+          mkdir -p .pr-verification
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const gates = [];
+            const dir = ".downloaded-artifacts";
+            if (fs.existsSync(dir)) {
+              function walk(current) {
+                const entries = fs.readdirSync(current, { withFileTypes: true });
+                for (const e of entries) {
+                  const p = path.join(current, e.name);
+                  if (e.isDirectory()) walk(p);
+                  else if (e.name.endsWith("-gate.json")) {
+                    try {
+                      gates.push(JSON.parse(fs.readFileSync(p, "utf-8")));
+                    } catch {}
+                  }
+                }
+              }
+              walk(dir);
+            }
+            fs.writeFileSync(".pr-verification/gate-results.json", JSON.stringify({ gates }, null, 2));
+          '
+
+      - name: Generate PR Summary Report & Upsert Sticky Comment
+        uses: ./.ci-tooling/.github/actions/pr-summary
+        with:
+          report-id: ${{ inputs.report-id }}
+          coverage-threshold: ${{ inputs.coverage-threshold }}
+          diff-coverage-threshold: ${{ inputs.diff-coverage-threshold }}
+          junit-path: ${{ inputs.junit-path }}
+          coverage-path: ${{ inputs.coverage-path }}
+          sarif-path: ${{ inputs.sarif-path }}
+          gate-results-path: '.pr-verification/gate-results.json'
+          impact-rules-path: ${{ inputs.impact-rules-path }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          base-ref: ${{ github.base_ref != '' && format('origin/{0}', github.base_ref) || 'origin/main' }}
+          head-ref: ${{ github.sha }}
+          working-directory: ${{ inputs.working-directory }}

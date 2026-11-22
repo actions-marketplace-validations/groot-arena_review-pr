@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="vitest tests" tests="3" failures="1" errors="0" time="1.45">
+  <testsuite name="AuthService" tests="2" failures="0" errors="0" time="0.80">
+    <testcase name="should return false when token is empty" classname="AuthService" time="0.02"/>
+    <testcase name="should verify valid jwt token" classname="AuthService" time="0.05"/>
+  </testsuite>
+  <testsuite name="BillingService" tests="1" failures="1" errors="0" time="0.65">
+    <testcase name="should process stripe payment" classname="BillingService" time="0.12">
+      <failure message="Payment failed with 402 Card Error" type="AssertionError">
+AssertionError: expected status 200 but received 402
+    at BillingService.processPayment (src/services/billing.ts:45:11)
+    at runTest (tests/billing.test.ts:18:9)
+      </failure>
+    </testcase>
+  </testsuite>
+</testsuites>

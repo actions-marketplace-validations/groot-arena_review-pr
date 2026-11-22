@@ -1,0 +1,64 @@
+name: 'Setup Runtime'
+description: 'Multi-language runtime setup with native dependency caching'
+
+inputs:
+  language:
+    description: 'Target runtime: node, python, go, java, or custom'
+    required: true
+  runtime-version:
+    description: 'Target version for the selected runtime'
+    required: false
+    default: ''
+  working-directory:
+    description: 'Working directory for caching manifests'
+    required: false
+    default: '.'
+  setup-command:
+    description: 'Optional custom setup command'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      if: inputs.language == 'node'
+      uses: actions/setup-node@1d0ffbe78b63af40301c58b63d91231a50b2832c # v4.2.0
+      with:
+        node-version: ${{ inputs.runtime-version != '' && inputs.runtime-version || '20' }}
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.working-directory }}/package-lock.json
+
+    - name: Setup Python
+      if: inputs.language == 'python'
+      uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+      with:
+        python-version: ${{ inputs.runtime-version != '' && inputs.runtime-version || '3.12' }}
+        cache: 'pip'
+        cache-dependency-path: |
+          ${{ inputs.working-directory }}/requirements*.txt
+          ${{ inputs.working-directory }}/pyproject.toml
+
+    - name: Setup Go
+      if: inputs.language == 'go'
+      uses: actions/setup-go@f111f330730b5538f650a1ff810da714249457a4 # v5.3.0
+      with:
+        go-version: ${{ inputs.runtime-version != '' && inputs.runtime-version || '1.23' }}
+        cache: true
+        cache-dependency-path: ${{ inputs.working-directory }}/go.sum
+
+    - name: Setup Java
+      if: inputs.language == 'java'
+      uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+      with:
+        distribution: 'temurin'
+        java-version: ${{ inputs.runtime-version != '' && inputs.runtime-version || '21' }}
+
+    - name: Run Custom Setup Script
+      if: inputs.setup-command != ''
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        SETUP_CMD: ${{ inputs.setup-command }}
+      run: |
+        eval "$SETUP_CMD"

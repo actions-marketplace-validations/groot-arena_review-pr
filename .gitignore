@@ -1,0 +1,5 @@
+node_modules/
+coverage/
+.pr-verification/
+.downloaded-artifacts/
+*.log

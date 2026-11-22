@@ -1,0 +1,78 @@
+name: 'Run Verification Gate'
+description: 'Safely executes a gate command with timing, error capture, and injection prevention'
+
+inputs:
+  name:
+    description: 'Name of the verification gate'
+    required: true
+  command:
+    description: 'Shell command to execute'
+    required: false
+    default: ''
+  working-directory:
+    description: 'Working directory for execution'
+    required: false
+    default: '.'
+
+outputs:
+  status:
+    description: 'Execution status: passed, failed, or skipped'
+    value: ${{ steps.runner.outputs.status }}
+  duration:
+    description: 'Execution duration in seconds'
+    value: ${{ steps.runner.outputs.duration }}
+  error-snippet:
+    description: 'Top error lines if failed'
+    value: ${{ steps.runner.outputs.error-snippet }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Execute Gate Command
+      id: runner
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        GATE_NAME: ${{ inputs.name }}
+        GATE_CMD: ${{ inputs.command }}
+      run: |
+        if [ -z "$GATE_CMD" ]; then
+          echo "Gate '$GATE_NAME' has no command configured. Skipping."
+          echo "status=skipped" >> $GITHUB_OUTPUT
+          echo "duration=0" >> $GITHUB_OUTPUT
+          echo "error-snippet=" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        echo "::group::Executing Gate: $GATE_NAME"
+        echo "Command: $GATE_CMD"
+
+        START_TIME=$(date +%s%N)
+        TEMP_LOG=$(mktemp)
+
+        set +e
+        eval "$GATE_CMD" 2>&1 | tee "$TEMP_LOG"
+        EXIT_CODE=${PIPESTATUS[0]}
+        set -e
+
+        END_TIME=$(date +%s%N)
+        DURATION_NS=$((END_TIME - START_TIME))
+        DURATION_SEC=$(awk "BEGIN {printf \"%.2f\", $DURATION_NS / 1000000000}")
+
+        echo "Gate '$GATE_NAME' exited with code $EXIT_CODE in ${DURATION_SEC}s"
+        echo "::endgroup::"
+
+        echo "duration=$DURATION_SEC" >> $GITHUB_OUTPUT
+
+        if [ $EXIT_CODE -eq 0 ]; then
+          echo "status=passed" >> $GITHUB_OUTPUT
+          echo "error-snippet=" >> $GITHUB_OUTPUT
+        else
+          echo "status=failed" >> $GITHUB_OUTPUT
+          SNIPPET=$(tail -n 15 "$TEMP_LOG" | tr '\n' ' ' | sed 's/"/\\"/g')
+          echo "error-snippet=$SNIPPET" >> $GITHUB_OUTPUT
+          rm -f "$TEMP_LOG"
+          exit $EXIT_CODE
+        fi
+
+        rm -f "$TEMP_LOG"
