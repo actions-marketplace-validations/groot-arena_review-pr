@@ -2,6 +2,7 @@
 
 [![Self-Test & Quality Gates](https://github.com/groot-arena/ci-pr-verification-workflow/actions/workflows/self-test.yml/badge.svg)](https://github.com/groot-arena/ci-pr-verification-workflow/actions/workflows/self-test.yml)
 [![Version](https://img.shields.io/badge/version-v1-blue.svg)](https://github.com/groot-arena/ci-pr-verification-workflow/releases)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20NodeNext-blue)](tsconfig.json)
 
 An enterprise-grade, reusable GitHub Actions workflow (`@v1`) that provides automated quality gates, high-signal inline static analysis reviews on changed lines, blast-radius detection, and a single idempotent sticky Pull Request summary report.
