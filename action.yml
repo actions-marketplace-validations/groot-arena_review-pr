@@ -1,0 +1,140 @@
+name: 'Enterprise Multi-Language PR Verification'
+description: 'Automated PR quality gates, diff coverage, inline SARIF reviews, and sticky PR reports.'
+author: 'Groot Arena'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  junit-path:
+    description: 'Path to JUnit XML test results file'
+    required: false
+    default: ''
+  coverage-path:
+    description: 'Path to LCOV or Cobertura XML coverage file'
+    required: false
+    default: ''
+  sarif-path:
+    description: 'Path to SARIF static analysis / lint findings file'
+    required: false
+    default: ''
+  gate-results-path:
+    description: 'Path to gate-results.json report'
+    required: false
+    default: ''
+  coverage-threshold:
+    description: 'Minimum overall codebase line coverage percentage (0-100)'
+    required: false
+    default: '80'
+  diff-coverage-threshold:
+    description: 'Minimum line coverage percentage on PR modified diff lines (0-100)'
+    required: false
+    default: '80'
+  max-inline-comments:
+    description: 'Maximum inline review comments to post on PR diff'
+    required: false
+    default: '15'
+  impact-rules-path:
+    description: 'Path to custom blast-radius impact analysis rules JSON'
+    required: false
+    default: ''
+  report-id:
+    description: 'Unique identifier for the verification report (useful for monorepos)'
+    required: false
+    default: 'default'
+  github-token:
+    description: 'GitHub token for PR inline reviews and sticky comment upserts'
+    required: false
+    default: ''
+  base-ref:
+    description: 'Base Git ref for diff calculation'
+    required: false
+    default: 'origin/main'
+  head-ref:
+    description: 'Head Git ref for diff calculation'
+    required: false
+    default: 'HEAD'
+  working-directory:
+    description: 'Working directory for paths and git diff'
+    required: false
+    default: '.'
+
+outputs:
+  verdict:
+    description: 'Overall verification gate verdict (PASSED or FAILED)'
+    value: ${{ steps.pr-summary.outputs.verdict }}
+  diff-coverage:
+    description: 'Calculated diff coverage percentage'
+    value: ${{ steps.pr-summary.outputs.diff-coverage }}
+  total-coverage:
+    description: 'Calculated overall codebase coverage percentage'
+    value: ${{ steps.pr-summary.outputs.total-coverage }}
+  tests-passed:
+    description: 'Number of passed tests'
+    value: ${{ steps.pr-summary.outputs.tests-passed }}
+  tests-failed:
+    description: 'Number of failed tests'
+    value: ${{ steps.pr-summary.outputs.tests-failed }}
+  total-findings:
+    description: 'Total static analysis findings count'
+    value: ${{ steps.post-inline-review.outputs.total-findings }}
+  critical-findings:
+    description: 'Critical severity findings count'
+    value: ${{ steps.post-inline-review.outputs.critical-findings }}
+  error-findings:
+    description: 'Error severity findings count'
+    value: ${{ steps.post-inline-review.outputs.error-findings }}
+  warning-findings:
+    description: 'Warning severity findings count'
+    value: ${{ steps.post-inline-review.outputs.warning-findings }}
+  inline-comments-posted:
+    description: 'Number of inline comments posted to the PR'
+    value: ${{ steps.post-inline-review.outputs.inline-comments-posted }}
+  overflow-count:
+    description: 'Number of findings exceeding inline cap'
+    value: ${{ steps.post-inline-review.outputs.overflow-count }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Post Inline Reviews
+      id: post-inline-review
+      if: inputs.sarif-path != '' && !cancelled()
+      continue-on-error: true
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        INPUT_SARIF_PATH: ${{ inputs.sarif-path }}
+        INPUT_MAX_INLINE_COMMENTS: ${{ inputs.max-inline-comments }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}
+        INPUT_HEAD_REF: ${{ inputs.head-ref }}
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      run: node "${{ github.action_path }}/dist/post-inline-review.js"
+
+    - name: Generate PR Summary Report
+      id: pr-summary
+      if: !cancelled()
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        INPUT_REPORT_ID: ${{ inputs.report-id }}
+        INPUT_JUNIT_PATH: ${{ inputs.junit-path }}
+        INPUT_COVERAGE_PATH: ${{ inputs.coverage-path }}
+        INPUT_SARIF_PATH: ${{ inputs.sarif-path }}
+        INPUT_GATE_RESULTS_PATH: ${{ inputs.gate-results-path }}
+        INPUT_COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}
+        INPUT_DIFF_COVERAGE_THRESHOLD: ${{ inputs.diff-coverage-threshold }}
+        INPUT_IMPACT_RULES_PATH: ${{ inputs.impact-rules-path }}
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}
+        INPUT_HEAD_REF: ${{ inputs.head-ref }}
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      run: node "${{ github.action_path }}/dist/pr-summary.js"
+
+    - name: Check Overall Status
+      if: steps.post-inline-review.outcome == 'failure' && steps.pr-summary.outcome == 'success'
+      shell: bash
+      run: |
+        echo "::error::Inline review step encountered an error."
+        exit 1

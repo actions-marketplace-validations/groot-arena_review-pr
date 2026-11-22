@@ -170,8 +170,21 @@ export async function run(): Promise<void> {
       core.info('PR context or GITHUB_TOKEN not available; sticky PR comment not posted.');
     }
 
-    // 10. Check merge blocking conditions
+    // 10. Set outputs
     const isFailed = markdownSummary.includes('### 🔴 Verification Failed');
+    core.setOutput('verdict', isFailed ? 'FAILED' : 'PASSED');
+    if (coverageReport?.diffCoverage) {
+      core.setOutput('diff-coverage', String(coverageReport.diffCoverage.percentage));
+    }
+    if (coverageReport?.overall) {
+      core.setOutput('total-coverage', String(coverageReport.overall.percentage));
+    }
+    if (testResult) {
+      core.setOutput('tests-passed', String(testResult.passed));
+      core.setOutput('tests-failed', String(testResult.failed));
+    }
+
+    // 11. Check merge blocking conditions
     if (isFailed) {
       core.setFailed('PR Verification failed quality gates or thresholds.');
     } else {

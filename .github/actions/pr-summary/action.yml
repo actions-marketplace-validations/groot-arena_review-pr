@@ -51,6 +51,18 @@ inputs:
     required: false
     default: '.'
 
+outputs:
+  verdict:
+    description: 'Overall verification gate verdict (PASSED or FAILED)'
+  diff-coverage:
+    description: 'Calculated diff coverage percentage'
+  total-coverage:
+    description: 'Calculated overall codebase coverage percentage'
+  tests-passed:
+    description: 'Number of passed tests'
+  tests-failed:
+    description: 'Number of failed tests'
+
 runs:
   using: 'node20'
   main: '../../../dist/pr-summary.js'
